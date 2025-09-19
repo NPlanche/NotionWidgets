@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Custom 23-Slide Slider</title>
+<title>Custom Slider</title>
 <style>
 * { margin:0; padding:0; box-sizing:border-box; }
 body { font-family:sans-serif; overflow:hidden; background:#362a2b; color:#e5ebf3; }
@@ -14,7 +14,7 @@ body { font-family:sans-serif; overflow:hidden; background:#362a2b; color:#e5ebf
   background-size:cover; background-position:center;
   opacity:0; transition:opacity 0.5s ease-in-out;
 }
-.slide.active { opacity:1; }
+.slide.current { opacity:1; }
 
 .controls {
   position:absolute; top:50%; width:100%;
@@ -33,7 +33,7 @@ body { font-family:sans-serif; overflow:hidden; background:#362a2b; color:#e5ebf
 
 <div class="slider">
   <!-- 23 slides -->
-  <div class="slide active" style="background-image:url('1.jpg')"></div>
+  <div class="slide current" style="background-image:url('1.jpg')"></div>
   <div class="slide" style="background-image:url('2.jpg')"></div>
   <div class="slide" style="background-image:url('3.jpg')"></div>
   <div class="slide" style="background-image:url('4.jpg')"></div>
@@ -71,15 +71,15 @@ const intervalTime = 5000;
 let autoSlide;
 
 function showSlide(index){
-  slides.forEach(s => s.classList.remove('active'));
-  slides[index].classList.add('active');
+  slides.forEach(s => s.classList.remove('current'));
+  slides[index].classList.add('current');
 }
 
-// Next/Prev functions
 function nextSlide(){
   current = (current + 1) % total;
   showSlide(current);
 }
+
 function prevSlide(){
   current = (current - 1 + total) % total;
   showSlide(current);
