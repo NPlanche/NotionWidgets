@@ -1,12 +1,71 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <title>Notion Widget Page</title>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Landing Page</title>
+<style>
+body {
+margin: 0;
+padding: 0;
+font-family: Arial, sans-serif;
+background: linear-gradient(135deg, #f5f7fa, #c3cfe2);
+display: flex;
+justify-content: center;
+align-items: center;
+height: 100vh;
+}
+
+
+.container {
+text-align: center;
+background: white;
+padding: 40px;
+border-radius: 20px;
+box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+width: 90%;
+max-width: 400px;
+animation: fadeIn 1s ease-in-out;
+}
+
+
+h1 {
+margin-bottom: 20px;
+font-size: 24px;
+}
+
+
+a {
+display: block;
+margin: 12px 0;
+padding: 12px;
+border-radius: 12px;
+background: #6c63ff;
+color: white;
+text-decoration: none;
+font-size: 16px;
+transition: 0.3s;
+}
+
+
+a:hover {
+background: #5851db;
+transform: translateY(-2px);
+}
+
+
+@keyframes fadeIn {
+from { opacity: 0; transform: translateY(10px); }
+to { opacity: 1; transform: translateY(0); }
+}
+</style>
 </head>
 <body>
-  <a href="me_image_carousel/index.html">Go to Vision Board Image Slider</a>
-  <a href="winx_desscode_image_carousel/index.html">Go to Winx Club Image Slider</a>
-  <a href="OneYearLater/index.html">Go to OneYearLater</a>
+<div class="container">
+<h1>Welcome</h1>
+<a href="Carousel/me_image_carousel/index.html">Vision Board Image Slider</a>
+<a href="Carousel/winx_desscode_image_carousel/index.html">Winx Club Image Slider</a>
+<a href="OneYearLater/index.html">OneYearLater</a>
+</div>
 </body>
 </html>
