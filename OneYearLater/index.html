@@ -199,159 +199,240 @@ body {
 
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
 <script>
+/* -----------------------------------------------------
+   CONSTANTS & ELEMENTS
+----------------------------------------------------- */
 const correctPasscode = "magicforest";
-const overlay = document.getElementById("passcodeOverlay");
-const input = document.getElementById("passcodeInput");
-const btn = document.getElementById("passcodeBtn");
-const msg = document.getElementById("passcodeMessage");
 
-// Check session
-if(sessionStorage.getItem("passcodeUnlocked") === "true"){
-    overlay.style.display = "none";
-    showCountdownPortal();
-}
-
-btn.onclick = () => {
-    if(input.value.toLowerCase() === correctPasscode){
-        msg.style.color = "#00ffcc";
-        msg.textContent = "✨ The Time Fairies flutter around you, granting access to the portal… she awaits! ✨";
-        sessionStorage.setItem("passcodeUnlocked", "true");
-        setTimeout(() => {
-            overlay.style.display = "none";
-            showCountdownPortal();
-        }, 1500);
-    } else {
-        msg.style.color = "#ff6f91";
-        msg.textContent = "🚫 The Time Fairies block your path, whispering: 'Not yet… try again.'";
-        input.value = "";
-        input.focus();
-    }
+const el = {
+    overlay: document.getElementById("passcodeOverlay"),
+    input: document.getElementById("passcodeInput"),
+    btn: document.getElementById("passcodeBtn"),
+    msg: document.getElementById("passcodeMessage"),
+    container: document.querySelector(".container"),
+    title: document.getElementById("title"),
+    subtitle: document.getElementById("subtitle"),
+    days: document.querySelector(".days"),
+    hours: document.querySelector(".hours"),
+    minutes: document.querySelector(".minutes"),
+    seconds: document.querySelector(".seconds"),
+    letterButtons: document.getElementById("letter-buttons"),
+    sparkleContainer: document.getElementById("sparkles-container"),
+    readModal: new bootstrap.Modal(document.getElementById("readModal")),
+    writeModal: new bootstrap.Modal(document.getElementById("writeModal")),
+    readBtn: document.getElementById("readBtn"),
+    writeBtn: document.getElementById("writeBtn"),
+    letterContent: document.getElementById("letterContent"),
+    letterText: document.getElementById("letterText"),
+    saveBtn: document.getElementById("saveLetterBtn")
 };
-input.addEventListener("keyup", (e) => { if(e.key === "Enter") btn.click(); });
 
-function showCountdownPortal(){
-    document.querySelector('.container').style.display = "block";
-    updateCountdown();
-}
-
+// Dates
 const READ_START = { month: 11, day: 1 };
-const READ_END = { month: 11, day: 10 };
+const READ_END   = { month: 11, day: 10 };
 
-const titleEl = document.getElementById("title");
-const subtitleEl = document.getElementById("subtitle");
-const daysEl = document.querySelector(".days");
-const hoursEl = document.querySelector(".hours");
-const minutesEl = document.querySelector(".minutes");
-const secondsEl = document.querySelector(".seconds");
-const letterButtons = document.getElementById("letter-buttons");
+/* -----------------------------------------------------
+   UTILITIES
+----------------------------------------------------- */
+const pad = (n) => n.toString().padStart(2, "0");
 
-function isBetween(date, start, end){
-    const d = new Date(date.getFullYear(), date.getMonth(), date.getDate());
-    const s = new Date(date.getFullYear(), start.month, start.day);
-    const e = new Date(date.getFullYear(), end.month, end.day);
-    return d >= s && d <= e;
+function todayAt(m, d) {
+    const now = new Date();
+    return new Date(now.getFullYear(), m, d);
 }
 
-function getNextDec1(){
+function isBetween(date, rangeStart, rangeEnd) {
+    const d = new Date(date.getFullYear(), date.getMonth(), date.getDate());
+    return d >= todayAt(rangeStart.month, rangeStart.day) &&
+           d <= todayAt(rangeEnd.month, rangeEnd.day);
+}
+
+function nextDec1() {
     const now = new Date();
-    let target = new Date(now.getFullYear(), 11, 1, 0,0,0);
-    if(now > target) target = new Date(now.getFullYear()+1, 11, 1, 0,0,0);
+    let target = new Date(now.getFullYear(), 11, 1);
+    if (now > target) target = new Date(now.getFullYear() + 1, 11, 1);
     return target;
 }
 
-function updateCountdown(){
+/* -----------------------------------------------------
+   PASSCODE SYSTEM
+----------------------------------------------------- */
+function unlockPortal() {
+    el.overlay.style.display = "none";
+    el.container.style.display = "block";
+    updateCountdown();
+}
+
+function handlePasscodeSubmit() {
+    if (el.input.value.toLowerCase() === correctPasscode) {
+        el.msg.style.color = "#00ffcc";
+        el.msg.textContent =
+            "✨ The Time Fairies flutter around you, granting access to the portal… she awaits! ✨";
+
+        sessionStorage.setItem("passcodeUnlocked", "true");
+
+        setTimeout(unlockPortal, 1200);
+    } else {
+        el.msg.style.color = "#ff6f91";
+        el.msg.textContent =
+            "🚫 The Time Fairies block your path, whispering: 'Not yet… try again.'";
+        el.input.value = "";
+        el.input.focus();
+    }
+}
+
+el.btn.onclick = handlePasscodeSubmit;
+el.input.addEventListener("keyup", (e) => {
+    if (e.key === "Enter") handlePasscodeSubmit();
+});
+
+// Auto-unlock if session already opened
+if (sessionStorage.getItem("passcodeUnlocked") === "true") {
+    unlockPortal();
+}
+
+/* -----------------------------------------------------
+   COUNTDOWN SYSTEM
+----------------------------------------------------- */
+let countdownInterval = null;
+
+function startCountdownTimer() {
+    if (countdownInterval) clearInterval(countdownInterval);
+    countdownInterval = setInterval(updateCountdown, 1000);
+}
+
+function updateCountdown() {
     const now = new Date();
 
-    if(isBetween(now, READ_START, READ_END)){
-        titleEl.textContent = "✨ The Portal Awaits ✨";
-        subtitleEl.innerHTML = "Step into the magical forest and reach through the portal… there she awaits.<br><span style='display:block; text-align:center;'>Write or read her message and capture your dreams!</span>";
-        letterButtons.style.display = "block";
+    // During reading period
+    if (isBetween(now, READ_START, READ_END)) {
+        el.title.textContent = "✨ The Portal Awaits ✨";
+        el.subtitle.innerHTML =
+            "Step into the magical forest and reach through the portal… there she awaits." +
+            "<br><span style='display:block; text-align:center;'>Write or read her message and capture your dreams!</span>";
+        el.letterButtons.style.display = "block";
 
-        const endDate = new Date(now.getFullYear(), READ_END.month, READ_END.day, 23,59,59);
-        const diff = endDate - now;
-        const d = Math.floor(diff / (1000*60*60*24));
-        const h = Math.floor((diff / (1000*60*60)) % 24);
-        const m = Math.floor((diff / (1000*60)) % 60);
+        const end = new Date(now.getFullYear(), READ_END.month, READ_END.day, 23, 59, 59);
+        const diff = end - now;
+
+        const d = Math.floor(diff / 86400000);
+        const h = Math.floor((diff / 3600000) % 24);
+        const m = Math.floor((diff / 60000) % 60);
         const s = Math.floor((diff / 1000) % 60);
-        daysEl.textContent = d.toString().padStart(2,'0');
-        hoursEl.textContent = h.toString().padStart(2,'0');
-        minutesEl.textContent = m.toString().padStart(2,'0');
-        secondsEl.textContent = s.toString().padStart(2,'0');
+
+        el.days.textContent = pad(d);
+        el.hours.textContent = pad(h);
+        el.minutes.textContent = pad(m);
+        el.seconds.textContent = pad(s);
         return;
     }
 
-    const target = getNextDec1();
+    // Countdown outside the reading window
+    const target = nextDec1();
     const diff = target - now;
-    const d = Math.floor(diff / (1000*60*60*24));
-    const h = Math.floor((diff / (1000*60*60)) % 24);
-    const m = Math.floor((diff / (1000*60)) % 60);
-    const s = Math.floor((diff / 1000) % 60);
-    daysEl.textContent = d.toString().padStart(2,'0');
-    hoursEl.textContent = h.toString().padStart(2,'0');
-    minutesEl.textContent = m.toString().padStart(2,'0');
-    secondsEl.textContent = s.toString().padStart(2,'0');
 
-    if(now < new Date(now.getFullYear(), READ_START.month, READ_START.day)){
-        titleEl.textContent = "✨ Await the Portal… ✨";
-        subtitleEl.textContent = "Her message stirs in the magical forest, waiting for you to reach through.";
-        letterButtons.style.display = "none";
+    const d = Math.floor(diff / 86400000);
+    const h = Math.floor((diff / 3600000) % 24);
+    const m = Math.floor((diff / 60000) % 60);
+    const s = Math.floor((diff / 1000) % 60);
+
+    el.days.textContent = pad(d);
+    el.hours.textContent = pad(h);
+    el.minutes.textContent = pad(m);
+    el.seconds.textContent = pad(s);
+
+    // Before November 1
+    if (now < todayAt(READ_START.month, READ_START.day)) {
+        el.title.textContent = "✨ Await the Portal… ✨";
+        el.subtitle.textContent =
+            "Her message stirs in the magical forest, waiting for you to reach through.";
+        el.letterButtons.style.display = "none";
+
+    // After November 10
     } else {
-        titleEl.textContent = "✨ The Portal Closes ✨";
-        subtitleEl.textContent = "Her message has returned safely through time. Return next year to glimpse the forest again.";
-        letterButtons.style.display = "none";
+        el.title.textContent = "✨ The Portal Closes ✨";
+        el.subtitle.textContent =
+            "Her message has returned safely through time. Return next year to glimpse the forest again.";
+        el.letterButtons.style.display = "none";
     }
 }
 
-setInterval(updateCountdown, 1000);
+startCountdownTimer();
 updateCountdown();
 
-// Modals
-const readModal = new bootstrap.Modal(document.getElementById('readModal'));
-const writeModal = new bootstrap.Modal(document.getElementById('writeModal'));
-const readBtn = document.getElementById('readBtn');
-const writeBtn = document.getElementById('writeBtn');
-const letterContent = document.getElementById('letterContent');
-const letterText = document.getElementById('letterText');
-const saveBtn = document.getElementById('saveLetterBtn');
-
-readBtn.onclick = () => {
-    letterContent.textContent = localStorage.getItem("futureLetter") || "No letter saved yet.";
-    readModal.show();
+/* -----------------------------------------------------
+   LETTER MODALS
+----------------------------------------------------- */
+el.readBtn.onclick = () => {
+    el.letterContent.textContent =
+        localStorage.getItem("futureLetter") || "No letter saved yet.";
+    el.readModal.show();
 };
 
-writeBtn.onclick = () => {
-    letterText.value = localStorage.getItem("futureLetter") || "";
-    writeModal.show();
+el.writeBtn.onclick = () => {
+    el.letterText.value = localStorage.getItem("futureLetter") || "";
+    el.writeModal.show();
 };
 
-saveBtn.onclick = () => {
-    localStorage.setItem("futureLetter", letterText.value.trim());
-    writeModal.hide();
+el.saveBtn.onclick = () => {
+    localStorage.setItem("futureLetter", el.letterText.value.trim());
+    el.writeModal.hide();
     alert("Her letter is safely sealed in the magical forest! ✨");
 };
 
-// Sparkles
-const sparkleContainer = document.getElementById('sparkles-container');
-function createSparkle(){
-    const s = document.createElement('div');
-    const size = Math.random()*6 + 4;
-    s.style.width = s.style.height = size+'px';
-    s.style.position = 'absolute';
-    s.style.top = '-10px';
-    s.style.left = Math.random()*window.innerWidth+'px';
-    const colors = ['#00FFCC','#FFD700','#FF69B4'];
-    s.style.background = `radial-gradient(circle, ${colors[Math.floor(Math.random()*colors.length)]}, rgba(0,0,0,0))`;
-    s.style.borderRadius = '50%';
-    s.style.filter = 'blur(1px)';
-    s.style.opacity = Math.random()*0.8+0.3;
-    s.style.pointerEvents = 'none';
-    sparkleContainer.appendChild(s);
+/* -----------------------------------------------------
+   SPARKLES
+----------------------------------------------------- */
+function createSparkle() {
+    const s = document.createElement("div");
+    const size = 4 + Math.random() * 6;
+
+    Object.assign(s.style, {
+        width: size + "px",
+        height: size + "px",
+        position: "absolute",
+        top: "-10px",
+        left: Math.random() * window.innerWidth + "px",
+        borderRadius: "50%",
+        filter: "blur(1px)",
+        pointerEvents: "none",
+        opacity: Math.random() * 0.8 + 0.3,
+        background: `radial-gradient(circle, ${
+            ["#00FFCC", "#FFD700", "#FF69B4"][Math.floor(Math.random() * 3)]
+        }, transparent)`
+    });
+
+    el.sparkleContainer.appendChild(s);
+
     let y = -10;
-    const speed = Math.random()*2+1;
-    function animate(){ y+=speed; s.style.top=y+'px'; if(y<window.innerHeight+10) requestAnimationFrame(animate); else s.remove();}
-    animate();
+    const speed = 1 + Math.random() * 2;
+
+    const fall = () => {
+        y += speed;
+        s.style.top = y + "px";
+        if (y < window.innerHeight + 10) requestAnimationFrame(fall);
+        else s.remove();
+    };
+    fall();
 }
+
 setInterval(createSparkle, 150);
+
+/* -----------------------------------------------------
+   BFCache FIX
+----------------------------------------------------- */
+window.addEventListener("pageshow", (event) => {
+    if (event.persisted) {
+        startCountdownTimer();
+        updateCountdown();
+
+        if (sessionStorage.getItem("passcodeUnlocked") === "true") {
+            el.overlay.style.display = "none";
+            el.container.style.display = "block";
+        }
+    }
+});
 </script>
+
 </body>
 </html>
