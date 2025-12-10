@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>One Year Later</title>
+<style>
+    body { font-family: Arial, sans-serif; text-align:center; margin:50px; background:#f4f4f9; color:#333; }
+    #countdown { font-size:2em; margin-bottom:20px; }
+    button { margin:5px; padding:10px 20px; font-size:1em; }
+    textarea { width:80%; height:150px; margin-top:10px; }
+    #letterDisplay { margin-top:20px; white-space:pre-wrap; text-align:left; border:1px solid #ccc; padding:10px; width:80%; margin:auto; background:#fff; }
+</style>
+</head>
+<body>
+
+<h1>One Year Later</h1>
+<div id="countdown">Loading countdown...</div>
+
+<div id="letterButtons" style="display:none;">
+    <button onclick="readLetter()">Read Letter</button>
+    <button onclick="document.getElementById('letterForm').style.display='block'">Write Letter</button>
+</div>
+
+<div id="letterForm" style="display:none;">
+    <textarea id="letterInput" placeholder="Write your letter to future you..."></textarea><br>
+    <button onclick="saveLetter()">Save Letter</button>
+</div>
+
+<div id="letterDisplay"></div>
+
+<script>
+function getNextDecember1() {
+    const now = new Date();
+    let year = now.getFullYear();
+    const dec1ThisYear = new Date(`${year}-12-01T23:59:59`);
+    if (now > dec1ThisYear) year += 1;
+    return new Date(`${year}-12-01T00:00:00`);
+}
+
+function updateCountdown() {
+    const now = new Date();
+    const year = now.getFullYear();
+    const isDec1 = now.getMonth() === 11 && now.getDate() === 1;
+
+    if (isDec1) {
+        // Time left today (until 23:59:59)
+        const endOfDay = new Date(`${year}-12-01T23:59:59`);
+        const diff = endOfDay - now;
+
+        const hours = Math.floor((diff / (1000 * 60 * 60)) % 24);
+        const minutes = Math.floor((diff / (1000 * 60)) % 60);
+
+        document.getElementById('countdown').innerText = `🎉 Today is December 1! You have ${hours}h ${minutes}m left to read or write your letter!`;
+    } else {
+        // Countdown to next Dec 1
+        const target = getNextDecember1();
+        const diff = target - now;
+
+        const days = Math.floor(diff / (1000 * 60 * 60 * 24));
+        const hours = Math.floor((diff / (1000 * 60 * 60)) % 24);
+        const minutes = Math.floor((diff / (1000 * 60)) % 60);
+
+        document.getElementById('countdown').innerText = `${days}d ${hours}h ${minutes}m until December 1`;
+    }
+}
+
+setInterval(updateCountdown, 60000);
+updateCountdown();
+
+function checkDecember1() {
+    const now = new Date();
+    const isDec1 = now.getMonth() === 11 && now.getDate() === 1;
+    document.getElementById('letterButtons').style.display = isDec1 ? 'block' : 'none';
+    if (!isDec1) document.getElementById('letterDisplay').innerText = '';
+}
+
+setInterval(checkDecember1, 60000);
+checkDecember1();
+
+function saveLetter() {
+    const letter = document.getElementById('letterInput').value.trim();
+    if (!letter) { alert("Your letter is empty!"); return; }
+    localStorage.setItem('futureLetter', letter);
+    alert("Letter saved! Old letter replaced.");
+    document.getElementById('letterForm').style.display='none';
+    document.getElementById('letterInput').value='';
+}
+
+function readLetter() {
+    const letter = localStorage.getItem('futureLetter');
+    document.getElementById('letterDisplay').innerText = letter || "No letter written yet!";
+}
+</script>
+
+</body>
+</html>
+
+
+
